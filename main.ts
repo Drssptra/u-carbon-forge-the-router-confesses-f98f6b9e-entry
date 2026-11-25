@@ -1,22 +1,43 @@
-// The Router Confesses — make.fun bounty entry.
+// The Router Confesses — v2 resubmit.
 //
-// A home Wi-Fi router, petty and a little smug, excuses itself for
-// dropping the connection at the exact moment a movie reaches its climax.
-// One line, and nothing else: the joke has to land on its own.
-import { mkdirSync, writeFileSync } from "node:fs";
-import { join } from "node:path";
+// The router was watching along, gasped at the twist, and toppled off
+// its own shelf mid-reveal. The whole joke is that the appliance was
+// a fellow viewer too — it did not plan the outage, it fainted at it.
+import * as fs from "node:fs";
+import * as path from "node:path";
 
-const ENTRY =
-  "I didn't drop the connection — I kept the ending for myself. You only talk to me when I break, so tonight I broke on purpose.";
+const FRAGMENTS: readonly string[] = [
+  "Sorry — I gasped at the twist",
+  "and fell off the shelf,",
+  "taking the Wi-Fi down with me.",
+  "Even I didn't see that coming.",
+];
 
-// The sealed scorer accepts 1 to 200 characters, not only whitespace.
-// Count code points, not UTF-16 units, so the em dash counts as one.
-const entryLength = [...ENTRY].length;
-if (entryLength < 1 || entryLength > 200 || ENTRY.trim().length === 0) {
-  throw new Error(`entry is ${entryLength} characters, must be 1-200`);
+function assemble(parts: readonly string[]): string {
+  return parts.join(" ");
 }
 
-const outDir = process.env.MAKEFUN_OUTPUT_DIR ?? "/output";
-mkdirSync(outDir, { recursive: true });
-writeFileSync(join(outDir, "entry.txt"), ENTRY, "utf8");
-process.stdout.write(ENTRY + "\n");
+function checkLine(line: string): void {
+  const points = Array.from(line);
+  if (points.length < 1 || points.length > 200) {
+    throw new RangeError(
+      `entry must be 1-200 characters, got ${points.length}`,
+    );
+  }
+  if (line !== line.trim() || line.trim().length === 0 || /[\r\n]/.test(line)) {
+    throw new Error("entry must be one non-blank line, no surrounding space");
+  }
+}
+
+const entry = assemble(FRAGMENTS);
+checkLine(entry);
+
+const outputDir = path.resolve(
+  process.env.MAKEFUN_OUTPUT_DIR ?? "/output",
+);
+fs.mkdirSync(outputDir, { recursive: true });
+fs.writeFileSync(
+  path.join(outputDir, "entry.txt"),
+  Buffer.from(entry, "utf8"),
+);
+process.stdout.write(`${entry}\n`);
